@@ -73,7 +73,6 @@
 #define ERRMSG_SZ	256
 #define MAX_IGNORED_EVENTS	256
 #define HOSTNAME_SZ 64
-#define CONFIG_FILE	"evtsys.cfg"
 
 #define QUERY_SZ	1024
 #define QUERY_LIST_SZ  524288

@@ -244,10 +244,11 @@ int CheckSyslogIgnoreFile(EventList * ignore_list, XPathList ** xpath_queries, c
 	FILE *file;
     int err;
 	
+	
     err = fopen_s(&file, filename, "r");
 
     if (err == ENOENT) {
-        Log(LOG_INFO,"Creating file with filename: %s", filename);
+        Log(LOG_INFO,"evtsys Creating file with filename: %s", filename);
 
 		if (CreateConfigFile(filename) != 0)
             return -1;
@@ -283,7 +284,7 @@ int CheckSyslogIgnoreFile(EventList * ignore_list, XPathList ** xpath_queries, c
                 char *ptr = line;
 
                 len = strlen(line);
-                for (i=0; i<len; i++) {
+                for (unsigned int j=0; j<len; j++) {
                     if (*ptr != ' ') {
                         blank = 0;
                         break;
@@ -306,8 +307,8 @@ int CheckSyslogIgnoreFile(EventList * ignore_list, XPathList ** xpath_queries, c
 				strID = strtok_s(NULL, delim, &next_token);
 				query = strtok_s(NULL, delim, &next_token);
 				if (source == NULL || strID == NULL) {
-					Log(LOG_ERROR,"File format incorrect: %s line: %i", filename, i + comments);
-					Log(LOG_ERROR,"Format should be [EventSource:[EventID|XPath:<Query>]] w/o brackets.");
+					Log(LOG_ERROR,"evtsys File format incorrect: %s line: %i", filename, i + comments);
+					Log(LOG_ERROR,"evtsys Format should be [EventSource:[EventID|XPath:<Query>]] w/o brackets.");
                     fclose(file);
 					return -1;
 				}
@@ -332,13 +333,14 @@ int CheckSyslogIgnoreFile(EventList * ignore_list, XPathList ** xpath_queries, c
 					}
 					else {
 						strncpy_s(ignore_list[i].source, sizeof(ignore_list[i].source), source, _TRUNCATE);
+						MultiByteToWideChar(CP_ACP, 0, source, -1, (LPWSTR)ignore_list[i].wsource, sizeof(ignore_list[i].wsource));
 					}
 
 					if(LogInteractive)
-						printf("IgnoredEvents[%i].id=%i \tIgnoredEvents[%i].source=%s\tIgnoredEvents[%i].query=%s\n", i, ignore_list[i].id, i, ignore_list[i].source, i, ignore_list[i].query);
+						Log(LOG_INFO, "evtsys Ignored Event [%i].id=%i \tIgnoredEvents[%i].source=%s", i, ignore_list[i].id, i, ignore_list[i].source);
 				} else {
 					// Notify if there are too many lines //
-					Log(LOG_ERROR,"Config file too large. Max size is %i lines. Truncating...", MAX_IGNORED_EVENTS);
+					Log(LOG_ERROR,"evtsys Config file too large. Max size is %i lines. Truncating...", MAX_IGNORED_EVENTS);
 					break;
 				}
                 i++;
@@ -351,7 +353,7 @@ int CheckSyslogIgnoreFile(EventList * ignore_list, XPathList ** xpath_queries, c
         {
             BOOL winEvents = CheckForWindowsEvents();
             
-            Log(LOG_INFO, "%s Filters: %i",
+            Log(LOG_INFO, "evtsys %s Filters: %i",
                 winEvents ? "XPath" : (SyslogIncludeOnly ? "Include" : "Ignore"),
                 winEvents ? XPATH_COUNT : i
             );
@@ -361,7 +363,7 @@ int CheckSyslogIgnoreFile(EventList * ignore_list, XPathList ** xpath_queries, c
 	// Can't run as IncludeOnly with no results set to include //
 	if (SyslogIncludeOnly && IGNORED_LINES == 0)
 	{
-		Log(LOG_ERROR,"You cannot set the IncludeOnly flag and not specify any events to include!");
+		Log(LOG_ERROR,"evtsys You cannot set the IncludeOnly flag and not specify any events to include!");
 		return -1;
 	}
 
@@ -383,7 +385,7 @@ XPathList* CheckXPath(XPathList * xpathList, char * line, char * delim)
 	temp = strtok_s(NULL, delim, &next_token);
 	if (temp != NULL){
 		if (_strcmpi(temp, "default") != 0){
-			Log(LOG_INFO, "Plugin : %s", temp);
+			Log(LOG_INFO, "evtsys Plugin : %s", temp);
 			strcpy_s(plugin, PLUGIN_SZ, temp);
 		}
 		else {
@@ -396,7 +398,7 @@ XPathList* CheckXPath(XPathList * xpathList, char * line, char * delim)
 	strcpy_s(xpath, QUERY_SZ, strtok_s(NULL, "\r\n", &next_token));  // Get the query
 	
 	if (source == NULL || xpath == NULL) {
-        Log(LOG_ERROR, "Invalid XPath config: %s", line);
+        Log(LOG_ERROR, "evtsys Invalid XPath config: %s", line);
         return xpathList;
     }
 
@@ -413,7 +415,7 @@ XPathList* CreateXPath(char * plugin, char * source, char * query) {
     }
     
     if (LogInteractive)
-        Log(LOG_INFO, "Creating %s", source);
+        Log(LOG_INFO, "evtsys Creating XPATH:  %s | %s", source, query);
 
     return newXPath;
 }

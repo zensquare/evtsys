@@ -59,6 +59,7 @@
 #include "check.h"
 #include "log.h"
 #include "syslog.h"
+#include <string.h>
 
 /* Number of libaries to load */
 #define LIBRARY_SZ		4
@@ -215,7 +216,8 @@ BOOL IgnoreSyslogEvent(EventList * ignore_list, const char * E_SOURCE, int E_ID)
 	BOOL inList = FALSE;
 	BOOL ignoreEvent = FALSE;
 
-	Log(LOG_INFO, "Checking source=%s ID=%i", E_SOURCE, E_ID);
+	if (LogInteractive)
+		Log(LOG_INFO, "Checking source=%s ID=%i", E_SOURCE, E_ID);
 
 	for (i = 0; i < IGNORED_LINES; i++) {
 		
@@ -228,10 +230,34 @@ BOOL IgnoreSyslogEvent(EventList * ignore_list, const char * E_SOURCE, int E_ID)
 	}
 
 	/* Only ignore if we are not running the ignore file as include only */
-	ignoreEvent = (inList != SyslogIncludeOnly);
+	//ignoreEvent = (inList != SyslogIncludeOnly);
 
 	/* Return Result */
-	return ignoreEvent;
+	return inList;
+}
+
+/* Check Event Against Ignore List */
+BOOL WIgnoreSyslogEvent(EventList * ignore_list, const WCHAR * E_SOURCE, int E_ID)
+{
+	int i;
+	BOOL inList = FALSE;
+
+	//if (LogInteractive)
+		//printf("Checking source=%S ID=%i\n", E_SOURCE, E_ID);
+
+	for (i = 0; i < IGNORED_LINES; i++) {
+
+		//if(LogInteractive)
+			//printf("Checking source=%S ID=%i wcsimp=%i\n", ignore_list[i].wsource, ignore_list[i].id, _wcsicmp(E_SOURCE, ignore_list[i].wsource));
+
+		if ((ignore_list[i].wild || E_ID == ignore_list[i].id) &&
+			(ignore_list[i].wildSource  || _wcsicmp(E_SOURCE, ignore_list[i].wsource) == 0))
+			inList = TRUE; /* Event is in the list */
+	}
+
+	
+	/* Return Result */
+	return inList;
 }
 
 /* Look up message file key */
@@ -633,6 +659,62 @@ int ConvertLogHostToIp(char * loghost, char ** ipstr)
     /* Success */
     return 0;
 }
+
+char * getConfigPath(){
+	DWORD last_error;
+	DWORD result;
+	DWORD path_size = 1024;
+	char* path = malloc(path_size);
+
+	for (;;)
+	{
+		memset(path, 0, path_size);
+		result = GetModuleFileName(0, path, path_size - 1);
+		last_error = GetLastError();
+
+		if (0 == result)
+		{
+			free(path);
+			path = 0;
+			break;
+		}
+		else if (result == path_size - 1)
+		{
+			free(path);
+			/* May need to also check for ERROR_SUCCESS here if XP/2K */
+			if (ERROR_INSUFFICIENT_BUFFER != last_error)
+			{
+				path = 0;
+				break;
+			}
+			path_size = path_size * 2;
+			path = malloc(path_size);
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	if (!path)
+	{
+		fprintf(stderr, "Failure: %d\n", last_error);
+	}
+	else
+	{
+		int length = 0;
+
+		//Remove the filename
+		length = strlen(path);
+		path[length - 3] = 'c';
+		path[length - 2] = 'f';
+		path[length - 1] = 'g';
+
+		printf("path=%s\n", path);
+	}
+	return path;
+}
+
 
 /* Create a new configuration file */
 DWORD CreateConfigFile(char * filename)

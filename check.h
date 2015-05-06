@@ -65,6 +65,7 @@ extern int XPATH_COUNT;
 /* Ignored Events Structure */
 struct EVENT_LIST {
 	char source[SOURCE_SZ];
+	WCHAR wsource[SOURCE_SZ];
 	char * query;
 	BOOL wild;
 	BOOL wildSource;
@@ -83,3 +84,4 @@ struct XPATH_LIST {
 XPathList* AddXPath(XPathList* xpathList, char * plugin, char * source, char * query);
 XPathList* CreateXPath(char * plugin, char * source, char * query);
 void       DeleteXPath(XPathList* oldXPath);
+char*	   getConfigPath();

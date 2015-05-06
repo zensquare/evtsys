@@ -325,6 +325,11 @@ DWORD ProcessEvent(EVT_HANDLE hEvent, PVOID context)
 	else
 		wcsncpy_s(source, COUNT_OF(source), pwszPublisherName, _TRUNCATE);
 
+	/* Check Event Info Against Ignore List */
+	if (WIgnoreSyslogEvent(IgnoredEvents, source, event_id)) {
+		return ERR_CONTINUE;
+	}
+
 	/* Format Event Timestamp */
 	if ((tstamp = WinEventTimeToString(eventTime)) == NULL)
 		tstamp = L"TIME_ERROR";

@@ -55,6 +55,7 @@
 */
 
 /* Include files */
+#include <stdio.h>
 #include "main.h"
 #include "check.h"
 #include "eventlog.h"
@@ -81,8 +82,9 @@ int MainLoop()
     /* Check for new Crimson Log Service */
 	winEvents = CheckForWindowsEvents();
 
+
 	/* Grab Ignore List From File */
-    if (CheckSyslogIgnoreFile(IgnoredEvents, &XPathQueries, CONFIG_FILE) < 0)
+    if (CheckSyslogIgnoreFile(IgnoredEvents, &XPathQueries, getConfigPath()) < 0)
 		return 1;
 
     /* Determine whether Tag is set */
@@ -101,14 +103,14 @@ int MainLoop()
     }
 
 	/* Service is now running */
-	Log(LOG_INFO, "Eventlog to Syslog Service Started: Version %s (%s-bit)", VERSION,
+	Log(LOG_INFO, "evtsys Eventlog to Syslog Service Started: Version %s (%s-bit)", VERSION,
 #ifdef _WIN64
 		"64"
 #else
 		"32"
 #endif
 	);
-	Log(LOG_INFO, "Flags: LogLevel=%u, IncludeOnly=%s, EnableTcp=%s, IncludeTag=%s, StatusInterval=%u",
+	Log(LOG_INFO, "evtsys Flags: LogLevel=%u, IncludeOnly=%s, EnableTcp=%s, IncludeTag=%s, StatusInterval=%u",
 		SyslogLogLevel,
         SyslogIncludeOnly ? "True" : "False",
         SyslogEnableTcp ? "True" : "False",
